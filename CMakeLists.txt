@@ -32,7 +32,9 @@ include_directories(
 )
 
 set(LIB_SOURCES
-        src/propertytree.h
+        src/node.cc
+        src/node_path.cc
+        src/property_tree.cc
         src/trace.hpp
         src/variant.cc
         src/variantpropertytree.cc
