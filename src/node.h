@@ -5,17 +5,12 @@
 #include <functional>
 #include "node_path.h"
 
-template<typename K, typename T>
-/*!
-    \brief The Node class
-    This is a leaf in the property tree
-*/
-
 /**
- * @brief This is a class for habdling the leaf nodes of the property tree.
+ * @brief This is a class for handling the leaf nodes of the property tree.
  * @tparam K The type of the node name.
  * @tparam T The type of the node data.
  */
+template<typename K, typename T>
 class Node {
  public:
   typedef std::map<K, Node *> ChildMap; ///< map of children.
@@ -51,12 +46,26 @@ class Node {
   /**
    * @brief Destruct and de-register from parent.
    */
-  virtual ~Node();
+  virtual ~Node() {
+    if (parent_) {
+      parent_->children_.erase(name()); // detach
+      parent_ = nullptr;
+    }
+  };
 
   /**
    * @brief Delete all children.
    */
-  void ClearChildren();
+  void ClearChildren() {
+    for (auto i = children_.begin(); i != children_.end(); i++) {
+      Node *node = i->second;
+      if (node) {
+        node->parent_ = nullptr;
+        delete node;
+      }
+    }
+    children_.clear();
+  }
 
   /**
    * @return The dictionary of children.
@@ -72,7 +81,7 @@ class Node {
    * @brief Set the node data value. The data type must have a copy constructor.
    * @param data The node data to set.
    */
-  void setData(const T &data) { data_ = data; }
+  void SetData(const T &data) { data_ = data; }
 
   /**
    * @brief Get a pointer to a child with a given name.
@@ -92,15 +101,26 @@ class Node {
    * @brief Add a child to the node.
    * @param child_node pointer to child node to add.
    */
-  void AddChild(Node *child_node);
+  void AddChild(Node *child_node) {
+    if (HasChild(child_node->name())) {
+      delete children_[child_node->name()];
+      children_.erase(child_node->name());
+    }
+    children_[child_node->name()] = child_node;
+  };
 
   /**
    * @brief Creates a child with default data.
    * @param name The child's name.
    * @param parent_node Pointer to the parent node, this node by default.
-   * @return the created node.
+   * @return Pointer to the created node.
    */
-  Node *CreateChild(const K &name, Node *parent_node = nullptr);
+  Node *CreateChild(const K &name, Node *parent_node = nullptr) {
+    if (!parent_node) parent_node = this;
+    Node *node = new Node(name, parent_node);
+    AddChild(node);
+    return node;
+  }
 
   /**
    * @brief Remove a child with the name given.
@@ -122,9 +142,9 @@ class Node {
 
   /**
    * @brief Set the name of the node.
-   * @param s
+   * @param node_name The name to give the node.
    */
-  void SetName(const K &s) { name_ = s; }
+  void SetName(const K &node_name) { name_ = node_name; }
 
   /**
    * @return A pointer to the parent.
@@ -135,7 +155,14 @@ class Node {
    * @brief Set or replace the parent node.
    * @param parent_node A pointer to the parent node to set.
    */
-  void setParent(Node *parent_node);
+  void SetParent(Node *parent_node) {
+    if (parent_ && (parent_ != parent_node)) {
+      parent_->children_.erase(name());
+    }
+
+    parent_ = parent_node;
+    if (parent_) parent_->children_[name()] = this;
+  };
 
   /**
    * @brief Get a pointer to the node at the path.
@@ -143,7 +170,16 @@ class Node {
    * @param depth The depth in the path to use.
    * @return A pointer to the node at the path or nullptr is a node doesn't exist at that path.
    */
-  Node *Find(const Path &path, int depth = 0);
+  Node *Find(const Path &path, int depth = 0) {
+    Node *res = GetChild(path[depth]);// do we have the child at this level?
+    if (res) {
+      depth++;
+      if (depth < (int) path.size()) {
+        res = res->Find(path, depth);
+      }
+    }
+    return res;
+  }
 
   /**
    * @brief Get a pointer to the node at the path.
@@ -161,7 +197,24 @@ class Node {
    * @param path The path with respect to this node.
    * @return A pointer to the new node or nullptr.
    */
-  Node *Add(const Path &path);
+  Node *Add(const Path &path) {
+    Node *new_node = Find(path); // Only create if it does not exist.
+    if (!new_node) {
+      // Create the path as required.
+      new_node = this;
+      int depth = 0;
+      while (new_node->HasChild(path[depth])) {
+        new_node = new_node->GetChild(path[depth]);
+        depth++;
+      }
+      // Create the rest.
+      for (auto i = static_cast<unsigned int>(depth); i < path.size(); i++) {
+        new_node = new_node->CreateChild(path[i]);
+      }
+    }
+
+    return new_node;
+  }
 
   /**
    * @brief Adds a node to the tree starting with this node.
@@ -178,7 +231,13 @@ class Node {
    * @brief Removes a node from the tree at path starting with this node.
    * @param path The path with respect to this node.
    */
-  void Remove(const Path &path);
+  void Remove(const Path &path) {
+    Node *p = Find(path);
+
+    if (p) {
+      delete p;
+    }
+  }
 
   /**
    * @brief Removes a node from the tree at path starting with this node.
@@ -195,14 +254,28 @@ class Node {
    * @param func The lambda function to iterate.
    * @return true on success.
    */
-  bool IterateNodes(std::function<bool(Node &)> func);
+  bool IterateNodes(std::function<bool(Node &)> func) {
+    if (func(*this)) {
+      for (auto i = children().begin(); i != children().end(); i++) {
+        (i->second)->iterateNodes(func);
+      }
+      return true;
+    }
+    return false;
+  }
+
 
   /**
    * @brief Iterate this node and all children nodes using a non-lambda visitor.
    * @param func The function to iterate.
    * @return true on success.
    */
-  void IterateNodes(NodeIteratorFunc &func);
+  void IterateNodes(NodeIteratorFunc &func) {
+    func.Do(this); // action the function for the node
+    for (auto i = children().begin(); i != children().end(); i++) {
+      (i->second)->iterateNodes(func);
+    }
+  }
 
   /**
    * @brief Write the node and its children to the stream.
@@ -210,7 +283,17 @@ class Node {
    * @param output_stream A reference to collect the stream.
    */
   template<typename STREAM>
-  void write(STREAM &output_stream);
+  void write(STREAM &output_stream) {
+    output_stream << name();
+    output_stream << data();
+    output_stream << static_cast<int>(children().size()); // this node's data
+    // now recurse
+    if (children().size() > 0) {
+      for (auto i = children().begin(); i != children().end(); i++) {
+        i->second->write(output_stream);
+      }
+    }
+  }
 
   /**
    * @brief Read a node and its children from a stream.
@@ -218,12 +301,37 @@ class Node {
    * @param input_stream A reference to the stream.
    */
   template<typename STREAM>
-  void read(STREAM &input_stream);
+  void read(STREAM &input_stream) {
+    int n = 0;
+    ClearChildren();
+    input_stream >> name_;
+    input_stream >> data_;
+    input_stream >> n;
+    if (n > 0) {
+      for (int i = 0; i < n; i++) {
+        Node *o = new Node();
+        o->read(input_stream); // recurse
+        AddChild(o); // add subtree to children
+      }
+    }
+  }
 
   /**
    * @brief Copy recursively to a node.
    * @param node The node to copy to.
    */
-  void CopyTo(Node *node);
+  void CopyTo(Node *node)  {
+    node->ClearChildren();
+    node->SetData(name());
+    node->SetData(data());
+    if (children().size() > 0) {
+      for (auto i = children().begin(); i != children().end(); i++) {
+        Node *c = new Node();
+        node->AddChild(node); // add the child
+        i->second->copyTo(c); // now recurse
+      }
+    }
+  }
+
 };
 #endif //OBJECT_PROPERTY_TREE_NODE_H

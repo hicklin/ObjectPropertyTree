@@ -28,7 +28,7 @@ void PropertyTree<K, T>::SetData(const P &path, const T &data) {
   }
   if (node) {
     WriteLock l(mutex_);
-    node->setData(data);
+    node->SetData(data);
   }
   SetChanged();
 }
@@ -61,10 +61,10 @@ void PropertyTree<K, T>::SetChildData(PropertyTree::PropertyNode *node, const K 
     WriteLock l(mutex_);
     if (node->HasChild(child_name)) {
 
-      node->GetChild(child_name)->setData(child_data);
+      node->GetChild(child_name)->SetData(child_data);
     } else {
       PropertyNode *c = node->CreateChild(child_name);
-      c->setData(child_data);
+      c->SetData(child_data);
     }
     SetChanged();
   }
