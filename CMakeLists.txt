@@ -34,10 +34,8 @@ include_directories(
 set(LIB_SOURCES
         src/node.cc
         src/node_path.cc
+        src/object_property_tree.cc
         src/property_tree.cc
-        src/trace.hpp
-        src/variant.cc
-        src/variantpropertytree.cc
         )
 
 add_library(object_property_tree SHARED ${LIB_SOURCES})
