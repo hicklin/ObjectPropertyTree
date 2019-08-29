@@ -1,7 +1,6 @@
-
-#file(GLOB test_files ../src/tests/*.cpp)
 set(test_files
-        ../src/tests/node.cc)
+        ../src/tests/node.cc
+        )
 
 include_directories()
 
