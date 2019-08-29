@@ -22,14 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ## Setting flags and definitions
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-## Finding the wxWidgets library.
-find_package(wxWidgets REQUIRED)
-include(${wxWidgets_USE_FILE})
-
-include_directories(
-        src
-        ${wxWidgets_INCLUDE_DIRS}
-)
+include_directories(src tests)
 
 set(LIB_SOURCES
         src/node.cc
@@ -38,8 +31,9 @@ set(LIB_SOURCES
         src/property_tree.cc
         )
 
+add_subdirectory(tests)
+
 add_library(object_property_tree SHARED ${LIB_SOURCES})
-target_link_libraries(object_property_tree ${wxWidgets_LIBRARIES})
 
 ## set the shared library soname
 set_target_properties(object_property_tree PROPERTIES
