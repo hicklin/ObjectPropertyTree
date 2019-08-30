@@ -16,7 +16,6 @@ class PropertyTree {
   bool changed_ = false; ///< Track if any action may have changed the tree.
 
  public:
-  T default_data_; ///< The default data to be returned.
   typedef Node<K, T> PropertyNode;
   typedef NodePath<K> Path;
 
@@ -70,42 +69,9 @@ class PropertyTree {
   }
 
   /**
-   * @brief Get a data value reference from the tree by path.
-   * @tparam P Path type.
-   * @param path The path of the object to get.
-   * @return A reference to the object or default value if not found.
-   */
-  template<typename P>
-  T &GetData(const P &path) {
-    ReadLock l(mutex_);
-    auto *p = root_.Find(path);
-    if (p) {
-      return p->data();
-    }
-    return default_data_;
-  }
-
-  /**
-   * @return A reference to the root node.
-   */
-  PropertyNode &root() { return root_; }
-
-  /**
    * @return A pointer to the root node.
    */
   PropertyNode *rootNode() { return &this->root_; }
-
-  /**
-   * @brief Find a node by path.
-   * @tparam P Path type.
-   * @param path The path of the node to get.
-   * @return A pointer to the node at the path or nullptr is a node doesn't exist at that path.
-   */
-  template<typename P>
-  PropertyNode *Find(const P &path) {
-    ReadLock l(mutex_);
-    return root_.Find(path);
-  }
 
   /**
    * @brief Set data for a node. Path is created if necessary.
@@ -125,6 +91,54 @@ class PropertyTree {
       node->SetData(data);
     }
     SetChanged();
+  }
+
+  /**
+   * @brief Get a data value reference from the tree by path.
+   * @tparam P Path type.
+   * @param path The path of the object to get.
+   * @param data A reference to collect the data object.
+   */
+  template<typename P>
+  void GetData(const P &path, T &data) {
+    ReadLock l(mutex_);
+    auto *p = root_.Find(path);
+    if (p) {
+      data = p->data();
+    }
+  }
+
+  /**
+   * @return A reference to the root node.
+   */
+  PropertyNode &GetRootNode() { return root_; }
+
+  /**
+   * @brief Get the node at a path
+   * @tparam P Path type.
+   * @param path The path of the object to get.
+   * @return The Node at the given path.
+   */
+  template<typename P>
+  PropertyNode *GetNode(const P &path) {
+    ReadLock l(mutex_);
+    auto *p = root_.Find(path);
+    if (p) {
+      return p;
+    }
+    return nullptr;
+  }
+
+  /**
+   * @brief Find a node by path.
+   * @tparam P Path type.
+   * @param path The path of the node to get.
+   * @return A pointer to the node at the path or nullptr is a node doesn't exist at that path.
+   */
+  template<typename P>
+  PropertyNode *Find(const P &path) {
+    ReadLock l(mutex_);
+    return root_.Find(path);
   }
 
   /**
@@ -168,84 +182,6 @@ class PropertyTree {
   }
 
   /**
-   * @brief Get the data of a child of the node.
-   * @param node The node to in.
-   * @param child_name The name of the child.
-   * @param default_data The default data to return.
-   * @return A reference to the data or default
-   */
-  T &GetChildData(PropertyNode *node, const K &child_name, T &default_data) {
-    ReadLock l(mutex_);
-    if (node && node->HasChild(child_name)) {
-      return node->GetChild(child_name)->data();
-    }
-    return default_data;
-  }
-
-  /**
-   * @brief Set the data of a node child.
-   * @param node The node to in.
-   * @param child_name The name of the child.
-   * @param child_data The data to set for the child.
-   */
-  void SetChildData(PropertyNode *node, const K &child_name, const T &child_data) {
-    if (node) {
-      WriteLock l(mutex_);
-      if (node->HasChild(child_name)) {
-
-        node->GetChild(child_name)->SetData(child_data);
-      } else {
-        PropertyNode *c = node->CreateChild(child_name);
-        c->SetData(child_data);
-      }
-      SetChanged();
-    }
-  }
-
-  /**
-   * @brief Iterates all nodes with a function.
-   * @param func The lambda function to use.
-   * @return true if iteration is to continue
-   */
-  bool IterateNodes(std::function<bool(PropertyNode &)> func) {
-    ReadLock l(mutex_);
-    return root_.IterateNodes(func);
-  }
-
-  /**
-   * @brief Write on a stream
-   * @tparam S The stream type.
-   * @param output_stream A reference to collect the stream.
-   */
-  template<typename S>
-  void write(S &output_stream) {
-    ReadLock l(mutex_);
-    root_.write(output_stream);
-  }
-
-  /**
-   * @brief Read from a stream.
-   * @tparam S The stream type.
-   * @param input_stream A reference to the stream.
-   */
-  template<typename S>
-  void read(S &input_stream) {
-    WriteLock l(mutex_);
-    root_.read(input_stream);
-    SetChanged();
-  }
-
-  /**
-   * @brief Copy to a tree.
-   * @param destination The destination tree.
-   */
-  void CopyTo(PropertyTree &destination) {
-    ReadLock l(mutex_);
-    root_.CopyTo(&destination.root_);
-    destination.SetChanged();
-  }
-
-  /**
    * @brief List the children of a node
    * @tparam P The path type.
    * @param path The path of the node to list.
@@ -254,12 +190,27 @@ class PropertyTree {
    */
   template<typename P>
   unsigned long ListChildren(const P &path, std::vector<K> &children_list) {
+    children_list.clear();
     auto i = Find(path);
     if (i) {
       ReadLock lx(mutex_);
       for (auto j = i->children().begin(); j != i->children().end(); j++) {
         children_list.push_back(j->first);
       }
+    }
+    return children_list.size();
+  }
+
+  /**
+   * @brief List the children of the root node
+   * @param children_list receives the list of child node names.
+   * @return The length of the list.
+   */
+  unsigned long ListChildren(std::vector<K> &children_list) {
+    children_list.clear();
+    ReadLock lx(mutex_);
+    for (auto j = root_.children().begin(); j != root_.children().end(); j++) {
+      children_list.push_back(j->first);
     }
     return children_list.size();
   }

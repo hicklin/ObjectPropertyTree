@@ -264,11 +264,6 @@ class Node {
     Remove(p);
   }
 
-  static bool rename (Node<K, T> &node) {
-    node->SetName = node.name() + "_yo";
-    return true;
-  }
-
   /**
    * @brief Iterate this node and all children nodes using the given lambda function.
    * @param func The lambda function to iterate.
@@ -294,62 +289,6 @@ class Node {
     func.Do(this); // action the function for the node
     for (auto i = children().begin(); i != children().end(); i++) {
       (i->second)->iterateNodes(func);
-    }
-  }
-
-  /**
-   * @brief Write the node and its children to the stream.
-   * @tparam STREAM The stream type.
-   * @param output_stream A reference to collect the stream.
-   */
-  template<typename STREAM>
-  void write(STREAM &output_stream) {
-    output_stream << name();
-    output_stream << data();
-    output_stream << static_cast<int>(children().size()); // this node's data
-    // now recurse
-    if (children().size() > 0) {
-      for (auto i = children().begin(); i != children().end(); i++) {
-        i->second->write(output_stream);
-      }
-    }
-  }
-
-  /**
-   * @brief Read a node and its children from a stream.
-   * @tparam STREAM The stream type.
-   * @param input_stream A reference to the stream.
-   */
-  template<typename STREAM>
-  void read(STREAM &input_stream) {
-    int n = 0;
-    ClearChildren();
-    input_stream >> name_;
-    input_stream >> data_;
-    input_stream >> n;
-    if (n > 0) {
-      for (int i = 0; i < n; i++) {
-        Node *o = new Node();
-        o->read(input_stream); // recurse
-        AddChild(o); // add subtree to children
-      }
-    }
-  }
-
-  /**
-   * @brief Copy recursively to a node.
-   * @param node The node to copy to.
-   */
-  void CopyTo(Node *node)  {
-    node->ClearChildren();
-    node->SetData(name());
-    node->SetData(data());
-    if (children().size() > 0) {
-      for (auto i = children().begin(); i != children().end(); i++) {
-        Node *c = new Node();
-        node->AddChild(node); // add the child
-        i->second->copyTo(c); // now recurse
-      }
     }
   }
 
