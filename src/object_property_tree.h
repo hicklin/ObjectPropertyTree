@@ -15,6 +15,9 @@ typedef NodePath<std::string> ObjectPath;
  */
 typedef PropertyTree<std::string, boost::any>::PropertyNode ObjectNode;
 
+/**
+ * @brief A property tree capable of storing any object types and pointers.
+ */
 class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
 
  public:

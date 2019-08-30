@@ -28,6 +28,9 @@ class Node {
    */
   class NodeIteratorFunc {
    public:
+    /**
+     * @brief A function to iterate through the nodes.
+     */
     virtual void Do(Node *) {}
   };
 
@@ -246,10 +249,9 @@ class Node {
    * @param path The path with respect to this node.
    */
   void Remove(const Path &path) {
-    Node *p = Find(path);
-
-    if (p) {
-      delete p;
+    Node *node = Find(path);
+    if (node) {
+      delete node;
     }
   }
 
@@ -257,10 +259,10 @@ class Node {
    * @brief Removes a node from the tree at path starting with this node.
    * @param path The path with respect to this node.
    */
-  void Remove(const K &s) {
-    Path p;
-    p.ToList(s);
-    Remove(p);
+  void Remove(const K &path) {
+    Path node_path;
+    node_path.ToList(path);
+    Remove(node_path);
   }
 
   /**

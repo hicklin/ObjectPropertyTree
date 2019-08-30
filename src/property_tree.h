@@ -10,13 +10,25 @@ typedef boost::shared_mutex ReadWriteMutex;
 typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 typedef boost::unique_lock<boost::shared_mutex> WriteLock;
 
+/**
+ * @brief A generic property tree.
+ * @tparam K The type of the key.
+ * @tparam T The type of the value.
+ */
 template<typename K, typename T>
 class PropertyTree {
   mutable ReadWriteMutex mutex_; ///< Mutex for read/write access.
   bool changed_ = false; ///< Track if any action may have changed the tree.
 
  public:
+  /**
+   * @brief A node type with matching key and value types.
+   */
   typedef Node<K, T> PropertyNode;
+
+  /**
+   * @brief A npde path type with matching key type.
+   */
   typedef NodePath<K> Path;
 
  private:

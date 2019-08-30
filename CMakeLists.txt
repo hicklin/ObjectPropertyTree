@@ -2,8 +2,8 @@ project(object_property_tree)
 cmake_minimum_required(VERSION 3.12)
 
 ## build settings
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
+set(VERSION_MAJOR 1)
+set(VERSION_MINOR 0)
 set(VERSION_PATCH 0)
 
 set(OBJECT_PROPERTY_TREE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
