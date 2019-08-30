@@ -51,6 +51,7 @@ class Node {
       parent_->children_.erase(name()); // detach
       parent_ = nullptr;
     }
+    ClearChildren();
   };
 
   /**
@@ -61,7 +62,7 @@ class Node {
       Node *node = i->second;
       if (node) {
         node->parent_ = nullptr;
-        delete node;
+        node->~Node();
       }
     }
     children_.clear();
@@ -95,7 +96,13 @@ class Node {
    * @param child_name The browse name of child to find.
    * @return true if child exists.
    */
-  bool HasChild(const K &child_name) { return children_[child_name] != nullptr; }
+  bool HasChild(const K &child_name) {
+    if ( children_.find(child_name) == children_.end() ) {
+      return false;
+    } else {
+      return children_[child_name] != nullptr;
+    }
+  }
 
   /**
    * @brief Add a child to the node.
@@ -144,7 +151,13 @@ class Node {
    * @brief Set the name of the node.
    * @param node_name The name to give the node.
    */
-  void SetName(const K &node_name) { name_ = node_name; }
+  void SetName(const K &node_name) {
+    if (parent_) {
+      parent_->children_.erase(name());
+      parent_->children_[node_name] = this;
+    }
+    name_ = node_name;
+  }
 
   /**
    * @return A pointer to the parent.
@@ -161,7 +174,9 @@ class Node {
     }
 
     parent_ = parent_node;
-    if (parent_) parent_->children_[name()] = this;
+    if (parent_) {
+      parent_->children_[name()] = this;
+    }
   };
 
   /**
@@ -247,6 +262,11 @@ class Node {
     Path p;
     p.ToList(s);
     Remove(p);
+  }
+
+  static bool rename (Node<K, T> &node) {
+    node->SetName = node.name() + "_yo";
+    return true;
   }
 
   /**
