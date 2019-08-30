@@ -62,7 +62,6 @@ class Node {
       Node *node = i->second;
       if (node) {
         node->parent_ = nullptr;
-        node->~Node();
       }
     }
     children_.clear();
