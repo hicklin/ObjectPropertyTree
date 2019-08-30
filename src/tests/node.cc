@@ -2,7 +2,7 @@
 #include "node.h"
 #include <boost/any.hpp>
 
-TEST_CASE("Property tree node") {
+TEST_CASE("Node") {
   std::string node_name = "Parent test node";
   std::string child1_name = "Child1 test node";
   std::string child2_name = "Child2 test node";
