@@ -6,6 +6,7 @@ set(LIB_SOURCES
         )
 
 add_library(object_property_tree SHARED ${LIB_SOURCES})
+target_link_libraries(object_property_tree ${Boost_LIBRARIES})
 
 ## set the shared library soname
 set_target_properties(object_property_tree PROPERTIES
@@ -15,4 +16,3 @@ set_target_properties(object_property_tree PROPERTIES
 ## install the shared library
 install(TARGETS object_property_tree
         LIBRARY DESTINATION lib)
-

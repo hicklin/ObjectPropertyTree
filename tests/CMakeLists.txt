@@ -1,6 +1,7 @@
 set(test_files
         ../src/tests/node.cc
         ../src/tests/node_path.cc
+        ../src/tests/property_tree.cc
         )
 
 include_directories()

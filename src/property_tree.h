@@ -63,7 +63,11 @@ class PropertyTree {
   /**
    * @brief Clear / delete all nodes (other than root) from the tree.
    */
-  void clear();
+  void clear() {
+    WriteLock l(mutex_);
+    root_.ClearChildren();
+    SetChanged();
+  }
 
   /**
    * @brief Get a data value reference from the tree by path.
@@ -72,7 +76,14 @@ class PropertyTree {
    * @return A reference to the object or default value if not found.
    */
   template<typename P>
-  T &GetData(const P &path);
+  T &GetData(const P &path) {
+    ReadLock l(mutex_);
+    auto *p = root_.Find(path);
+    if (p) {
+      return p->data();
+    }
+    return default_data_;
+  }
 
   /**
    * @return A reference to the root node.
@@ -103,7 +114,18 @@ class PropertyTree {
    * @param data The data to set at path.
    */
   template<typename P>
-  void SetData(const P &path, const T &data);
+  void SetData(const P &path, const T &data) {
+    auto node = root_.Find(path);
+    if (!node) {
+      WriteLock l(mutex_);
+      node = root_.Add(path);
+    }
+    if (node) {
+      WriteLock l(mutex_);
+      node->SetData(data);
+    }
+    SetChanged();
+  }
 
   /**
    * @brief Check if a node exists at the path.
@@ -133,7 +155,17 @@ class PropertyTree {
    * @param node The node the get the full path for.
    * @param path A reference to collect the full path of the node.
    */
-  void GetFullPath(PropertyNode *node, Path &path);
+  void GetFullPath(PropertyNode *node, Path &path) {
+    path.clear();
+    if (node) {
+      ReadLock l(mutex_);
+      while (node->parent() != nullptr) {
+        path.push_back(node->name());
+        node = node->parent();
+      }
+      std::reverse(std::begin(path), std::end(path));
+    }
+  }
 
   /**
    * @brief Get the data of a child of the node.
@@ -142,7 +174,13 @@ class PropertyTree {
    * @param default_data The default data to return.
    * @return A reference to the data or default
    */
-  T &GetChildData(PropertyNode *node, const K &child_name, T &default_data);
+  T &GetChildData(PropertyNode *node, const K &child_name, T &default_data) {
+    ReadLock l(mutex_);
+    if (node && node->HasChild(child_name)) {
+      return node->GetChild(child_name)->data();
+    }
+    return default_data;
+  }
 
   /**
    * @brief Set the data of a node child.
@@ -150,7 +188,19 @@ class PropertyTree {
    * @param child_name The name of the child.
    * @param child_data The data to set for the child.
    */
-  void SetChildData(PropertyNode *node, const K &child_name, const T &child_data);
+  void SetChildData(PropertyNode *node, const K &child_name, const T &child_data) {
+    if (node) {
+      WriteLock l(mutex_);
+      if (node->HasChild(child_name)) {
+
+        node->GetChild(child_name)->SetData(child_data);
+      } else {
+        PropertyNode *c = node->CreateChild(child_name);
+        c->SetData(child_data);
+      }
+      SetChanged();
+    }
+  }
 
   /**
    * @brief Iterates all nodes with a function.
@@ -203,7 +253,16 @@ class PropertyTree {
    * @return The length of the list.
    */
   template<typename P>
-  unsigned long ListChildren(const P &path, std::vector<K> &children_list);
+  unsigned long ListChildren(const P &path, std::vector<K> &children_list) {
+    auto i = Find(path);
+    if (i) {
+      ReadLock lx(mutex_);
+      for (auto j = i->children().begin(); j != i->children().end(); j++) {
+        children_list.push_back(j->first);
+      }
+    }
+    return children_list.size();
+  }
 
 };
 #endif //OBJECT_PROPERTY_TREE_PROPERTY_TREE_H
