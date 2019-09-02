@@ -31,15 +31,15 @@ TEST_CASE("ObjectTree") {
   ObjectPath path4;
   path4.ToList("object4");
 
-  object_tree.SetObjectPointer(path4, &object4);
-  object_tree.SetObjectPointer("objects.object5", &object5);
-  object_tree.SetObjectPointer("objects.object6", &object6);
+  object_tree.SetPointer(path4, &object4);
+  object_tree.SetPointer("objects.object5", &object5);
+  object_tree.SetPointer("objects.object6", &object6);
 
-  auto *object4_get = object_tree.GetObjectPointer<int>(path4);
+  auto *object4_get = object_tree.GetPointer<int>(path4);
   REQUIRE(object4_get == &object4);
-  auto *object5_get = object_tree.GetObjectPointer<std::string>("objects.object5");
+  auto *object5_get = object_tree.GetPointer<std::string>("objects.object5");
   REQUIRE(object5_get == &object5);
-  auto *object6_get = object_tree.GetObjectPointer<char>("objects.object6");
+  auto *object6_get = object_tree.GetPointer<char>("objects.object6");
   REQUIRE(object6_get == &object6);
 
   object_tree.remove("object1.object2");
@@ -48,7 +48,7 @@ TEST_CASE("ObjectTree") {
 
   // Handling mistyping.
   auto object2_fail = object_tree.GetObject<char>("object1.object2");
-  auto object2_ptr_fail = object_tree.GetObjectPointer<int>("object1.object2");
+  auto object2_ptr_fail = object_tree.GetPointer<int>("object1.object2");
 
   REQUIRE(!object2_fail);
   REQUIRE(!object2_ptr_fail);
