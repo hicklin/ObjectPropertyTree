@@ -73,7 +73,6 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
     SetData(path, object);
   }
 
- private:
   /**
    * @brief Get the pointer of the object stored in the object node.
    * @tparam T The type of the stored object.
@@ -96,8 +95,6 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
     }
     return nullptr;
   }
-
- public:
 
   /**
    * @brief Get the pointer of the object stored in the object tree at the path.
