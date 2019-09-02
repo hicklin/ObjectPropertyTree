@@ -36,7 +36,7 @@ include_directories(
 add_subdirectory(include)
 add_subdirectory(src)
 
-if (BUILD_TESTS)
+#if (BUILD_TESTS)
     message("building tests")
     add_subdirectory(tests)
-endif ()
+#endif ()
