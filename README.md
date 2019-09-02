@@ -32,10 +32,13 @@ Documentation can be generated using doxygen
 
 ## Tests
 
-A tests application is supplied and built with the library. This can be executed to ensure that the library is working 
-as intended on you system.
+A tests application is supplied with the library. To build it set the variable `BUILD_TESTS` ON. 
+```cmake
+cmake -DBUILD_TESTS=ON
+```
+This test application can be executed to ensure that the library is working as intended on your system.
 
-The source code of the tests are locates in `src/tests`. These tests for the ObjectPropertyTree class can be used as an 
+The source code of the tests are located in `src/tests`. The tests for the ObjectPropertyTree class can be used as an 
 **example** of the use of the library.
 
 

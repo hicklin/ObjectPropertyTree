@@ -27,10 +27,16 @@ set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost COMPONENTS system thread REQUIRED)
 
 include_directories(
+        include
         src
         tests
         ${Boost_INCLUDE_DIRS}
 )
 
-add_subdirectory(tests)
+add_subdirectory(include)
 add_subdirectory(src)
+
+if (BUILD_TESTS)
+    message("building tests")
+    add_subdirectory(tests)
+endif ()
