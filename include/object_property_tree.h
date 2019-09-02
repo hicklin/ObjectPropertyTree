@@ -33,10 +33,10 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
    * @param object_pointer The pointer to set.
    */
   template<typename T>
-  void SetObjectPointer(const ObjectPath &path, T *object_pointer) {
+  void SetPointer(const ObjectPath &path, T *object_pointer) {
     std::string object_path;
     path.ToString(object_path);
-    SetObjectPointer(object_path, object_pointer);
+    SetPointer(object_path, object_pointer);
   }
 
   /**
@@ -46,7 +46,7 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
    * @param object_pointer The pointer to set.
    */
   template<typename T>
-  void SetObjectPointer(const std::string &path, T *object_pointer) {
+  void SetPointer(const std::string &path, T *object_pointer) {
     auto shared_pointer = std::shared_ptr<T>(object_pointer);
     SetData(path, shared_pointer);
   }
@@ -80,7 +80,7 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
    * @return A pointer to the object stored in the node.
    */
   template<typename T>
-  T *GetObjectPointer(ObjectNode *object_node) {
+  T *GetPointer(ObjectNode *object_node) {
     if(object_node) {
       try {
         boost::any &object_data = object_node->data();
@@ -103,10 +103,10 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
    * @return A pointer to the object stored in the node.
    */
   template<typename T>
-  T *GetObjectPointer(const std::string &path) {
+  T *GetPointer(const std::string &path) {
     ObjectNode *node = Find(path);
     if(node) {
-      return GetObjectPointer<T>(node);
+      return GetPointer<T>(node);
     }
     return nullptr;
   }
@@ -118,10 +118,10 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
    * @return A pointer to the object stored in the node.
    */
   template<typename T>
-  T *GetObjectPointer(const ObjectPath &path) {
+  T *GetPointer(const ObjectPath &path) {
     std::string object_path;
     path.ToString(object_path);
-    return GetObjectPointer<T>(object_path);
+    return GetPointer<T>(object_path);
   }
 
   /**
