@@ -125,7 +125,7 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
   }
 
   /**
-   * @brief Get the object at path.
+   * @brief Get the object at path. If one does not exist, a new object for the specified type is returned.
    * @tparam T The type of the object to get.
    * @param path The path of the object in the tree.
    * @return The object.
@@ -139,6 +139,7 @@ class ObjectPropertyTree : public PropertyTree<std::string, boost::any> {
         return boost::any_cast<T>(object);
       }
     }
+    return new T();
   }
 
   /**
